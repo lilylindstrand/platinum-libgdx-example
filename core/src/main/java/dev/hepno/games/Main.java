@@ -14,9 +14,10 @@ import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.VisTable;
 import com.kotcrab.vis.ui.widget.VisTextButton;
 import dev.hepno.platinum_api.packet.Packet;
+import dev.hepno.platinum_api.packet.PlayerDisconnectPacket;
 import dev.hepno.platinum_api.packet.PlayerFreeCoinPacket;
 import dev.hepno.platinum_game_client.PlatinumGameClientApplication;
-import dev.hepno.platinum_game_client.UdpClient;
+import dev.hepno.platinum_game_client.client.UdpClient;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
@@ -24,13 +25,13 @@ public class Main extends ApplicationAdapter {
     private Texture image;
     private VisTable table;
 
-    private PlatinumGameClientApplication platinumGameClientApplication;
+    private PlatinumGameClientApplication client;
 
     @Override
     public void create() {
-        platinumGameClientApplication = new PlatinumGameClientApplication();
+        client = new PlatinumGameClientApplication();
         try {
-            platinumGameClientApplication.run(new String[]{});
+            client.run(new String[]{});
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -48,7 +49,7 @@ public class Main extends ApplicationAdapter {
            @Override
             public void clicked(InputEvent event, float x, float y) {
                try {
-                   platinumGameClientApplication.getClient().write(new PlayerFreeCoinPacket(11, 1, 5));
+                   client.getClient().write(new PlayerFreeCoinPacket(client.getSession().sessionId(), 1, 5));
                } catch (InterruptedException e) {
                    throw new RuntimeException(e);
                }
@@ -74,6 +75,9 @@ public class Main extends ApplicationAdapter {
     public void dispose() {
         batch.dispose();
         image.dispose();
-        platinumGameClientApplication.getClient().shutdown();
+
+        try { client.getClient().write(new PlayerDisconnectPacket(client.getSession().sessionId()));}
+        catch (InterruptedException e) {throw new RuntimeException(e);}
+        client.getClient().shutdown();
     }
 }
